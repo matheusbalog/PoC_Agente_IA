@@ -36,7 +36,7 @@ chamados_teste = [
 
 url_servidor = "http://127.0.0.1:8001/api/jira/issues"
 
-print("=== TESTES AUTOMÁTICOS ===\n")
+print("=== TESTES AUTOMÁTICOS COM HUMAN-IN-THE-LOOP (HITL) ===\n")
 
 for i, chamado in enumerate(chamados_teste, 1):
     print(f"--- Teste {i} ---")
@@ -87,7 +87,7 @@ Descrição: {chamado['descricao']}
             print(f"❌ Erro ao processar o teste {i}: {e}")
             continue
 
-    # 2. Payload para o servidor
+    # 2. Monta o Payload Proposto
     payload_completo = {
         "titulo": chamado["titulo"],
         "descricao": chamado["descricao"],
@@ -96,13 +96,25 @@ Descrição: {chamado['descricao']}
         "departamento": dados_ia.get("departamento"),
     }
 
-    # 3. Envia para o servidor simulado do GLPI
-    try:
-        resposta_servidor = requests.post(url_servidor, json=payload_completo)
-        print(f"🖥️ Servidor GLPI Respondeu: {resposta_servidor.json()}")
-    except Exception as server_error:
-        print(f"⚠️ Aviso: Servidor local não respondeu ({server_error})")
+    # --- 3. CAMADA DE APROVAÇÃO HUMANA (HITL) ---
+    print("\n--- 🧑‍💻 PAINEL DE APROVAÇÃO (HUMAN-IN-THE-LOOP) ---")
+    print(f"  • Título propostas: {payload_completo['titulo']}")
+    print(f"  • Categoria sugerida: {payload_completo['categoria']}")
+    print(f"  • Prioridade sugerida: {payload_completo['prioridade']}")
+    print(f"  • Departamento sugerido: {payload_completo['departamento']}")
+
+    aprovacao = input("👉 Deseja aprovar a criação deste card no Jira? (s/n): ").strip().lower()
+
+    if aprovacao == 's' or aprovacao == 'sim':
+        print("✅ Card APROVADO pelo analista humano. Enviando para o Jira...")
+        try:
+            resposta_servidor = requests.post(url_servidor, json=payload_completo)
+            print(f"🖥️ Resposta do Jira (Mock): {resposta_servidor.json()}")
+        except Exception as server_error:
+            print(f"⚠️ Aviso: Servidor mock do Jira não respondeu ({server_error})")
+    else:
+        print("❌ Card REPROVADO/NEGADO. O chamado foi retido para triagem manual (Estado: ESCALATED).")
 
     print("=" * 50)
-    print("Aguardando 4 segundos para a próxima requisição...")
+    print("Aguardando 4 segundos para o próximo teste...\n")
     time.sleep(4)
