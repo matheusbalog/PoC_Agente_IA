@@ -4,6 +4,8 @@ import requests
 from dotenv import load_dotenv
 from google import genai
 from google.genai import types
+import time
+
 
 #.env
 load_dotenv()
@@ -11,8 +13,9 @@ api_key = os.getenv("GEMINI_API_KEY")
 
 client = genai.Client(api_key=api_key)
 
-# Lista com vários tipos de chamados
-chamados_teste = [
+for i, chamado in enumerate(chamados_teste, 1):
+
+    chamados_teste = [
     {
         "titulo": "Impressora do 2º andar travada",
         "descricao": "A impressora fica piscando luz vermelha e não puxa papel.",
@@ -87,3 +90,6 @@ Descrição: {chamado['descricao']}
     print(f"❌ Erro ao processar o teste {i}: {e}")
 
   print("=" * 50)
+
+  print("Aguardando 4 segundos para não estourar o limite da API...")
+  time.sleep(4)
