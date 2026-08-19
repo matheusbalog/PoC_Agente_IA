@@ -17,5 +17,10 @@ Testes rápidos e isolados para validação do fluxo de triagem, investigação 
 git clone [https://github.com/matheusbalog/PoC_Agente_IA.git](https://github.com/matheusbalog/PoC_Agente_IA.git)
 cd PoC_Agente_IA
 
+# Criar o .env e a chave de API do gemini
+
 # Instale as dependências
 pip install fastapi uvicorn google-generativeai pydantic python-dotenv
+
+# Rode o servidor
+uvicorn main:app --reload
