@@ -34,7 +34,7 @@ chamados_teste = [
     },
 ]
 
-url_servidor = "http://127.0.0.1:8000/receber-chamado"
+url_servidor = "http://127.0.0.1:8001/api/jira/issues"
 
 print("=== TESTES AUTOMÁTICOS ===\n")
 
