@@ -1,21 +1,19 @@
 import json
 import os
-import requests
+import time
 from dotenv import load_dotenv
 from google import genai
 from google.genai import types
-import time
+import requests
 
-
-#.env
+# .env
 load_dotenv()
 api_key = os.getenv("GEMINI_API_KEY")
 
 client = genai.Client(api_key=api_key)
 
-for i, chamado in enumerate(chamados_teste, 1):
-
-    chamados_teste = [
+# 1. Definição dos chamados (movida para o topo para evitar erro de referência)
+chamados_teste = [
     {
         "titulo": "Impressora do 2º andar travada",
         "descricao": "A impressora fica piscando luz vermelha e não puxa papel.",
@@ -41,11 +39,11 @@ url_servidor = "http://127.0.0.1:8000/receber-chamado"
 print("=== TESTES AUTOMÁTICOS ===\n")
 
 for i, chamado in enumerate(chamados_teste, 1):
-  print(f"--- Teste {i} ---")
-  print(f"Título: {chamado['titulo']}")
+    print(f"--- Teste {i} ---")
+    print(f"Título: {chamado['titulo']}")
 
-  # Prompt
-  prompt = f"""Analise o chamado de TI abaixo e categorize-o.
+    # Prompt
+    prompt = f"""Analise o chamado de TI abaixo e categorize-o.
 Retorne um JSON com exatamente estas três chaves:
 - "categoria": Escolha entre "Bug", "Dúvida", "Melhoria", "Solicitação"
 - "prioridade": Escolha entre "Baixa", "Média", "Alta", "Urgente"
@@ -55,25 +53,41 @@ Título: {chamado['titulo']}
 Descrição: {chamado['descricao']}
 """
 
-  try:
-    # 1.Análise do chamado 
-    resposta_ia = client.models.generate_content(
-        model="gemini-3.6-flash",
-        contents=prompt,
-        config=types.GenerateContentConfig(
-            response_mime_type="application/json",
-        ),
-    )
+    try:
+        # 1. Análise do chamado via IA
+        resposta_ia = client.models.generate_content(
+            model="gemini-3.6-flash",
+            contents=prompt,
+            config=types.GenerateContentConfig(
+                response_mime_type="application/json",
+            ),
+        )
 
-    dados_ia = json.loads(resposta_ia.text)
-    print(
-        "🤖 Gemini Classificou -> Categoria:"
-        f" {dados_ia.get('categoria')} | Prioridade:"
-        f" {dados_ia.get('prioridade')} | Depto:"
-        f" {dados_ia.get('departamento')}"
-    )
+        dados_ia = json.loads(resposta_ia.text)
+        print(
+            "🤖 Gemini Classificou -> Categoria:"
+            f" {dados_ia.get('categoria')} | Prioridade:"
+            f" {dados_ia.get('prioridade')} | Depto:"
+            f" {dados_ia.get('departamento')}"
+        )
 
-    # 2.Payload 
+    except Exception as e:
+        # Fallback de emergência caso estoure a cota (429)
+        if "429" in str(e) or "RESOURCE_EXHAUSTED" in str(e):
+            print(
+                "⚠️ Cota da API esgotada temporariamente. Usando resposta simulada"
+                " (fallback) para a PoC."
+            )
+            dados_ia = {
+                "categoria": "Solicitação",
+                "prioridade": "Média",
+                "departamento": "Suporte Técnico",
+            }
+        else:
+            print(f"❌ Erro ao processar o teste {i}: {e}")
+            continue
+
+    # 2. Payload para o servidor
     payload_completo = {
         "titulo": chamado["titulo"],
         "descricao": chamado["descricao"],
@@ -83,13 +97,12 @@ Descrição: {chamado['descricao']}
     }
 
     # 3. Envia para o servidor simulado do GLPI
-    resposta_servidor = requests.post(url_servidor, json=payload_completo)
-    print(f"🖥️ Servidor GLPI Respondeu: {resposta_servidor.json()}")
+    try:
+        resposta_servidor = requests.post(url_servidor, json=payload_completo)
+        print(f"🖥️ Servidor GLPI Respondeu: {resposta_servidor.json()}")
+    except Exception as server_error:
+        print(f"⚠️ Aviso: Servidor local não respondeu ({server_error})")
 
-  except Exception as e:
-    print(f"❌ Erro ao processar o teste {i}: {e}")
-
-  print("=" * 50)
-
-  print("Aguardando 4 segundos para não estourar o limite da API...")
-  time.sleep(4)
+    print("=" * 50)
+    print("Aguardando 4 segundos para a próxima requisição...")
+    time.sleep(4)
