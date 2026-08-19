@@ -18,4 +18,4 @@ git clone [https://github.com/matheusbalog/PoC_Agente_IA.git](https://github.com
 cd PoC_Agente_IA
 
 # Instale as dependências
-pip install fastapi uvicorn
+pip install fastapi uvicorn google-generativeai pydantic python-dotenv
