@@ -3,7 +3,7 @@
 Servidor Mock desenvolvido em FastAPI para validação da lógica de orquestração de agentes de IA (GLPI -> Bitbucket > Jira).
 
 ## Objetivo
-Testes rápidos e isolados para validação do fluxo de triagem, investigação e aprovação humana (HITL) e os Princípios definidos no **ADR-001** e **ADR-002**.
+Testes rápidos e isolados para validação do fluxo de triagem, investigação e aprovação humana (HITL).
 
 ## Funcionalidades
 - **Simulação de Polling:** Simula a busca periódica de chamados no GLPI.
